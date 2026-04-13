@@ -1,0 +1,63 @@
+class Parser:
+    def __init__(self, grammar, start):
+        self.G = grammar
+        self.start = start
+        self.words = []
+        self.pos = 0
+
+    def parse(self, words):
+        self.words = words
+        self.pos = 0
+
+        tree = self._parse(self.start)
+
+        if tree and self.pos == len(self.words):
+            return tree
+        return None
+
+    def _parse(self, symbol):
+
+        if symbol not in self.G:
+            if self.pos < len(self.words) and self.words[self.pos] == symbol:
+                self.pos += 1
+                return (symbol, symbol)
+            return None
+
+        for production in self.G[symbol]:
+            saved_pos = self.pos
+            children = []
+
+            for sym in production:
+                node = self._parse(sym)
+                if node is None:
+                    self.pos = saved_pos
+                    break
+                children.append(node)
+            else:
+                return (symbol, children)
+
+        return None
+
+if __name__ == "__main__":
+    grammar = {
+        "S": [["NP", "VP"]],
+        "NP": [["Det", "N"]],
+        "VP": [["V", "NP"]],
+        "Det": [["the"], ["a"]],
+        "N": [["cat"], ["dog"]],
+        "V": [["chased"], ["saw"]]
+    }
+
+    parser = Parser(grammar, "S")
+
+    sentence = "the cat chased a dog".split()
+
+    tree = parser.parse(sentence)
+
+    print("Sentence:", sentence)
+
+    if tree:
+        print("\nParse Tree:\n")
+        print(tree)
+    else:
+        print("Parsing Failed ❌")
