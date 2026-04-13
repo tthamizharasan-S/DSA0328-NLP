@@ -1,0 +1,56 @@
+class AgreementChecker:
+    def __init__(self):
+
+        self.singular_nouns = {"cat", "dog", "boy", "girl"}
+        self.plural_nouns = {"cats", "dogs", "boys", "girls"}
+
+        self.singular_verbs = {"runs", "eats", "sleeps"}
+        self.plural_verbs = {"run", "eat", "sleep"}
+
+    def get_number(self, word):
+        if word in self.singular_nouns:
+            return "singular"
+        elif word in self.plural_nouns:
+            return "plural"
+        return None
+
+    def get_verb_number(self, word):
+        if word in self.singular_verbs:
+            return "singular"
+        elif word in self.plural_verbs:
+            return "plural"
+        return None
+
+    def check(self, sentence):
+        words = sentence.lower().split()
+
+        if len(words) < 2:
+            return "Invalid sentence"
+
+        subject = words[0]
+        verb = words[1]
+
+        subj_num = self.get_number(subject)
+        verb_num = self.get_verb_number(verb)
+
+        if subj_num is None or verb_num is None:
+            return "Unknown word in sentence"
+
+        if subj_num == verb_num:
+            return "Agreement Correct ✅"
+        else:
+            return "Agreement Error ❌"
+
+
+if __name__ == "__main__":
+    checker = AgreementChecker()
+
+    sentences = [
+        "cat runs",
+        "cats run",
+        "dog eat",
+        "boys eats"
+    ]
+
+    for sent in sentences:
+        print(sent, "->", checker.check(sent))
