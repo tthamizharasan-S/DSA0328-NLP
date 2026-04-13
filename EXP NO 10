@@ -1,0 +1,56 @@
+class TransformationBasedTagger:
+    def __init__(self):
+
+        self.default_tag = "NN"
+
+    def initial_tagging(self, sentence):
+
+        return [(word, self.default_tag) for word in sentence]
+
+    def apply_rules(self, tagged_sentence):
+        tagged = tagged_sentence.copy()
+
+        for i in range(len(tagged)):
+            word, tag = tagged[i]
+
+            if word.endswith("ing"):
+                tagged[i] = (word, "VBG")
+
+            elif word.endswith("ed"):
+                tagged[i] = (word, "VBD")
+
+            elif word.isdigit():
+                tagged[i] = (word, "CD")
+
+            elif word.lower() == "is":
+                tagged[i] = (word, "VBZ")
+
+            elif i > 0 and tagged[i - 1][0].lower() == "to":
+                tagged[i] = (word, "VB")
+
+            elif word[0].isupper():
+                tagged[i] = (word, "NNP")
+
+        return tagged
+
+    def tag(self, sentence):
+
+        tagged_sentence = self.initial_tagging(sentence)
+
+        final_tags = self.apply_rules(tagged_sentence)
+
+        return final_tags
+
+
+
+if __name__ == "__main__":
+    tagger = TransformationBasedTagger()
+
+    sentence = ["Ravi", "is", "going", "to", "play", "cricket", "in", "2024"]
+
+    result = tagger.tag(sentence)
+
+    print("Input Sentence:", sentence)
+    print("\nTagged Output:")
+    for word, tag in result:
+        print(word, "->", tag)
