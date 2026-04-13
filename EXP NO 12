@@ -1,0 +1,55 @@
+class Earley:
+    def __init__(self, grammar, start):
+        self.G = grammar
+        self.start = start
+
+    def parse(self, words):
+        chart = [set() for _ in range(len(words) + 1)]
+        chart[0].add(("γ", (self.start,), 0, 0))  
+
+        for i in range(len(chart)):
+            changed = True
+            while changed:
+                changed = False
+                for (lhs, rhs, dot, start) in list(chart[i]):
+
+                    if dot < len(rhs):
+                        sym = rhs[dot]
+
+                        if sym in self.G:
+                            for prod in self.G[sym]:
+                                state = (sym, tuple(prod), 0, i)  
+                                if state not in chart[i]:
+                                    chart[i].add(state)
+                                    changed = True
+
+                        elif i < len(words) and sym == words[i]:
+                            chart[i+1].add((lhs, rhs, dot+1, start))
+
+                    else:
+                        for (plhs, prhs, pdot, pstart) in chart[start]:
+                            if pdot < len(prhs) and prhs[pdot] == lhs:
+                                state = (plhs, prhs, pdot+1, pstart)
+                                if state not in chart[i]:
+                                    chart[i].add(state)
+                                    changed = True
+
+        return any(lhs == "γ" and dot == 1 and start == 0
+                   for (lhs, rhs, dot, start) in chart[len(words)])
+
+if __name__ == "__main__":
+    grammar = {
+        "S": [["NP", "VP"]],
+        "NP": [["Det", "N"]],
+        "VP": [["V", "NP"]],
+        "Det": [["the"], ["a"]],
+        "N": [["cat"], ["dog"]],
+        "V": [["chased"], ["saw"]]
+    }
+
+    parser = Earley(grammar, "S")
+
+    sent = "the cat chased a dog".split()
+
+    print("Sentence:", sent)
+    print("Accepted" if parser.parse(sent) else "Rejected")
