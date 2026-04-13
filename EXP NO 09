@@ -1,0 +1,80 @@
+import re
+
+class RuleBasedPOSTagger:
+    def __init__(self):
+ 
+        self.lexicon = {
+            "is": "VBZ",
+            "am": "VBP",
+            "are": "VBP",
+            "was": "VBD",
+            "were": "VBD",
+            "be": "VB",
+            "been": "VBN",
+            "being": "VBG",
+            "have": "VB",
+            "has": "VBZ",
+            "had": "VBD",
+            "do": "VB",
+            "does": "VBZ",
+            "did": "VBD",
+            "in": "IN",
+            "on": "IN",
+            "at": "IN",
+            "with": "IN",
+            "and": "CC",
+            "or": "CC",
+            "but": "CC",
+            "the": "DT",
+            "a": "DT",
+            "an": "DT"
+        }
+
+        self.rules = [
+            (r'^[0-9]+$', 'CD'),           
+            (r'.*ing$', 'VBG'),            
+            (r'.*ed$', 'VBD'),             
+            (r'.*es$', 'VBZ'),             
+            (r'.*ould$', 'MD'),            
+            (r'.*\'s$', 'NN$'),            
+            (r'.*s$', 'NNS'),              
+            (r'.*ly$', 'RB'),           
+            (r'.*able$', 'JJ'),            
+            (r'.*ous$', 'JJ'),
+            (r'.*ful$', 'JJ'),
+            (r'.*ive$', 'JJ'),
+            (r'.*al$', 'JJ'),
+            (r'^[A-Z][a-z]*$', 'NNP'),     
+            (r'.*', 'NN')             
+        ]
+
+    def tag(self, sentence):
+        tagged_sentence = []
+
+        for word in sentence:
+            word_lower = word.lower()
+
+            if word_lower in self.lexicon:
+                tagged_sentence.append((word, self.lexicon[word_lower]))
+                continue
+
+            for pattern, tag in self.rules:
+                if re.match(pattern, word):
+                    tagged_sentence.append((word, tag))
+                    break
+
+        return tagged_sentence
+
+
+
+if __name__ == "__main__":
+    tagger = RuleBasedPOSTagger()
+
+    sentence = ["Ravi", "is", "running", "quickly", "in", "2024"]
+
+    result = tagger.tag(sentence)
+
+    print("Input Sentence:", sentence)
+    print("\nTagged Output:")
+    for word, tag in result:
+        print(word, "->", tag)
