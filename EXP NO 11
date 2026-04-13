@@ -1,0 +1,61 @@
+class TopDownParser:
+    def __init__(self, grammar, start_symbol):
+        self.grammar = grammar
+        self.start_symbol = start_symbol
+
+    def parse(self, tokens):
+        self.tokens = tokens
+        self.pos = 0
+
+        success = self._parse_symbol(self.start_symbol)
+
+        return success and self.pos == len(self.tokens)
+
+    def _parse_symbol(self, symbol):
+
+        if symbol not in self.grammar:
+            if self.pos < len(self.tokens) and self.tokens[self.pos] == symbol:
+                self.pos += 1
+                return True
+            return False
+
+        for production in self.grammar[symbol]:
+            saved_pos = self.pos
+            success = True
+
+            for sym in production:
+                if not self._parse_symbol(sym):
+                    success = False
+                    break
+
+            if success:
+                return True
+            else:
+                self.pos = saved_pos  
+
+        return False
+
+
+
+if __name__ == "__main__":
+
+    grammar = {
+        "S": [["NP", "VP"]],
+        "NP": [["Det", "N"]],
+        "VP": [["V", "NP"]],
+        "Det": [["the"], ["a"]],
+        "N": [["cat"], ["dog"]],
+        "V": [["chased"], ["saw"]]
+    }
+
+    parser = TopDownParser(grammar, "S")
+
+    sentence = "the cat chased a dog".split()
+
+    result = parser.parse(sentence)
+
+    print("Sentence:", sentence)
+    if result:
+        print("Parsing Successful ✅")
+    else:
+        print("Parsing Failed ❌")
