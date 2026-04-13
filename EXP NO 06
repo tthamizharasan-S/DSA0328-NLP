@@ -1,0 +1,42 @@
+import nltk
+import random
+from nltk.tokenize import word_tokenize
+from collections import defaultdict, Counter
+
+nltk.download('punkt')
+
+text = "I love natural language processing. I love building NLP models."
+
+tokens = word_tokenize(text.lower())
+
+bigrams = list(nltk.bigrams(tokens))
+
+model = defaultdict(Counter)
+for w1, w2 in bigrams:
+    model[w1][w2] += 1
+
+def get_next_word(word):
+    next_words = model[word]
+    total = sum(next_words.values())
+    
+    words = list(next_words.keys())
+    probs = [count / total for count in next_words.values()]
+    
+    return random.choices(words, probs)[0]
+
+def generate_text(start_word, length=10):
+    current_word = start_word.lower()
+    output = [current_word]
+    
+    for _ in range(length):
+        if current_word in model:
+            next_word = get_next_word(current_word)
+            output.append(next_word)
+            current_word = next_word
+        else:
+            break
+    
+    return " ".join(output)
+
+
+print(generate_text("i", 10))
