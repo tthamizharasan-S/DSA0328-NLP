@@ -1,0 +1,81 @@
+from collections import defaultdict
+
+class PCFGParser:
+    def __init__(self, grammar):
+        self.grammar = grammar
+
+    def parse(self, sentence):
+        words = sentence.split()
+        n = len(words)
+
+     
+        dp = [[defaultdict(float) for _ in range(n)] for _ in range(n)]
+
+     
+        back = [[{} for _ in range(n)] for _ in range(n)]
+
+   
+        for i, word in enumerate(words):
+            for lhs, rules in self.grammar.items():
+                for rhs, prob in rules:
+                    if rhs == (word,):
+                        dp[i][i][lhs] = prob
+
+        for length in range(2, n + 1):
+            for i in range(n - length + 1):
+                j = i + length - 1
+
+                for k in range(i, j):
+                    for lhs, rules in self.grammar.items():
+                        for rhs, prob in rules:
+
+                            if len(rhs) == 2:
+                                B, C = rhs
+
+                                if B in dp[i][k] and C in dp[k+1][j]:
+                                    p = prob * dp[i][k][B] * dp[k+1][j][C]
+
+                                    if p > dp[i][j].get(lhs, 0):
+                                        dp[i][j][lhs] = p
+                                        back[i][j][lhs] = (k, B, C)
+
+
+        if "S" not in dp[0][n-1]:
+            return None
+
+        return self.build_tree(back, words, 0, n-1, "S")
+
+    def build_tree(self, back, words, i, j, symbol):
+        if i == j:
+            return (symbol, words[i])
+
+        k, B, C = back[i][j][symbol]
+        left = self.build_tree(back, words, i, k, B)
+        right = self.build_tree(back, words, k+1, j, C)
+
+        return (symbol, left, right)
+
+if __name__ == "__main__":
+
+    grammar = {
+        "S": [(("NP", "VP"), 1.0)],
+        "NP": [(("Det", "N"), 0.6), (("cat",), 0.4)],
+        "VP": [(("V", "NP"), 1.0)],
+        "Det": [(("the",), 0.5), (("a",), 0.5)],
+        "N": [(("cat",), 0.5), (("dog",), 0.5)],
+        "V": [(("chased",), 1.0)]
+    }
+
+    parser = PCFGParser(grammar)
+
+    sentence = "the cat chased a dog"
+
+    tree = parser.parse(sentence)
+
+    print("Sentence:", sentence)
+
+    if tree:
+        print("\nMost Probable Parse Tree:\n")
+        print(tree)
+    else:
+        print("No valid parse found ❌")
