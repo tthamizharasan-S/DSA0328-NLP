@@ -1,0 +1,32 @@
+import nltk
+from nltk import word_tokenize, pos_tag
+
+sentence = "The quick brown fox jumps over the lazy dog"
+def rule_based_pos(word):
+    w = word.lower()
+
+    if w in ["the", "a", "an"]:
+        return "DT"   # Determiner
+    elif w in ["over", "under", "in", "on", "at", "by", "with"]:
+        return "IN"   # Preposition
+    elif w.endswith("ing"):
+        return "VBG"  # Verb gerund
+    elif w.endswith("ed"):
+        return "VBD"  # Past tense verb
+    elif w.endswith("s"):
+        return "VBZ"  # Verb, 3rd person singular
+    elif w in ["quick", "brown", "lazy"]:
+        return "JJ"   # Adjective
+    else:
+        return "NN"   # Default noun
+
+tokens = sentence.split()
+rule_tags = [(word, rule_based_pos(word)) for word in tokens]
+
+print("Rule-based POS Tags:")
+print(rule_tags)
+nltk_tokens = word_tokenize(sentence)
+nltk_tags = pos_tag(nltk_tokens)
+
+print("\nStochastic / NLTK POS Tags:")
+print(nltk_tags)
