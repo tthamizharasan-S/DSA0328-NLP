@@ -1,0 +1,20 @@
+from collections import Counter
+import re
+text = """Natural language processing enables computers to understand human language"""
+text = text.lower()
+words = re.findall(r'\b\w+\b', text)
+def generate_ngrams(words, n):
+    return [tuple(words[i:i+n]) for i in range(len(words)-n+1)]
+unigrams = generate_ngrams(words, 1)
+bigrams = generate_ngrams(words, 2)
+trigrams = generate_ngrams(words, 3)
+uni_freq = Counter(unigrams)
+bi_freq = Counter(bigrams)
+tri_freq = Counter(trigrams)
+def display_freq(freq_dict, title):
+    print(f"\n{title} (sorted by frequency):")
+    for gram, count in freq_dict.most_common():
+        print(f"{' '.join(gram)} : {count}")
+display_freq(uni_freq, "Unigrams")
+display_freq(bi_freq, "Bigrams")
+display_freq(tri_freq, "Trigrams")
