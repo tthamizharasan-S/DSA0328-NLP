@@ -1,0 +1,42 @@
+from collections import Counter
+import math
+import re
+corpus = """Natural language processing enables computers to understand human language.
+Natural language processing is a key part of artificial intelligence."""
+def tokenize(text):
+    return re.findall(r'\b\w+\b', text.lower())
+
+words = tokenize(corpus)
+def unigram_entropy(words):
+    total_words = len(words)
+    unigram_counts = Counter(words)
+
+    entropy = 0
+    for word, count in unigram_counts.items():
+        p = count / total_words
+        entropy -= p * math.log2(p)
+
+    return entropy
+def bigram_entropy(words):
+    bigrams = [(words[i], words[i+1]) for i in range(len(words)-1)]
+
+    unigram_counts = Counter(words)
+    bigram_counts = Counter(bigrams)
+
+    total_bigrams = len(bigrams)
+
+    entropy = 0
+    for (w1, w2), count in bigram_counts.items():
+        p_joint = count / total_bigrams
+        p_cond = count / unigram_counts[w1]  # P(w2 | w1)
+
+        entropy -= p_joint * math.log2(p_cond)
+
+    return entropy
+
+uni_H = unigram_entropy(words)
+bi_H = bigram_entropy(words)
+
+print(f"Unigram Entropy : {uni_H:.4f} bits")
+print(f"Bigram Entropy  : {bi_H:.4f} bits")
+
