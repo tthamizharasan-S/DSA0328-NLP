@@ -1,0 +1,35 @@
+from collections import defaultdict, Counter
+import re
+corpus = """Natural language processing enables computers to understand human language.
+Natural language processing is important for AI."""
+corpus = corpus.lower()
+words = re.findall(r'\b\w+\b', corpus)
+unigrams = words
+bigrams = [(words[i], words[i+1]) for i in range(len(words)-1)]
+
+unigram_counts = Counter(unigrams)
+bigram_counts = Counter(bigrams)
+
+vocab = set(unigrams)
+V = len(vocab)
+
+unsmoothed_probs = {}
+
+for (w1, w2), count in bigram_counts.items():
+    unsmoothed_probs[(w1, w2)] = count / unigram_counts[w1]
+
+smoothed_probs = {}
+
+for w1 in vocab:
+    for w2 in vocab:
+        bigram_count = bigram_counts.get((w1, w2), 0)
+        smoothed_probs[(w1, w2)] = (bigram_count + 1) / (unigram_counts[w1] + V)
+
+
+print("\nUnsmoothed Bigram Probabilities:")
+for k, v in sorted(unsmoothed_probs.items(), key=lambda x: x[1], reverse=True):
+    print(f"{k} : {v:.4f}")
+
+print("\nLaplace Smoothed Bigram Probabilities:")
+for k, v in list(sorted(smoothed_probs.items(), key=lambda x: x[1], reverse=True))[:15]:
+    print(f"{k} : {v:.4f}")
