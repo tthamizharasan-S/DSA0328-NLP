@@ -1,0 +1,104 @@
+from collections import Counter
+import re
+import math
+corpus = """
+natural language processing enables computers to understand human language
+natural language processing helps computers process language
+computers understand human language using natural language processing
+"""
+test_sentence = "natural language processing helps computers understand human language"
+
+def tokenize(text):
+    return re.findall(r"\b\w+\b", text.lower())
+
+def add_tokens(words):
+    return ["<s>", "<s>"] + words + ["</s>"]
+
+train_words = add_tokens(tokenize(corpus))
+test_words = add_tokens(tokenize(test_sentence))
+unigram_counts = Counter(train_words)
+bigram_counts = Counter(zip(train_words, train_words[1:]))
+trigram_counts = Counter(zip(train_words, train_words[1:], train_words[2:]))
+
+vocab = set(train_words)
+V = len(vocab)
+N = sum(unigram_counts.values())
+def unigram_prob(w):
+    return unigram_counts[w] / N if unigram_counts[w] > 0 else 1 / (N + V)
+
+def bigram_prob(w1, w2):
+    if unigram_counts[w1] == 0:
+        return 0
+    return bigram_counts[(w1, w2)] / unigram_counts[w1]
+
+def trigram_prob(w1, w2, w3):
+    if bigram_counts[(w1, w2)] == 0:
+        return 0
+    return trigram_counts[(w1, w2, w3)] / bigram_counts[(w1, w2)]
+def backoff_prob(w1, w2, w3):
+    if trigram_counts[(w1, w2, w3)] > 0:
+        return trigram_prob(w1, w2, w3), "trigram"
+    elif bigram_counts[(w2, w3)] > 0:
+        return bigram_prob(w2, w3), "bigram"
+    else:
+        return unigram_prob(w3), "unigram"
+lambda1 = 0.2   # unigram weight
+lambda2 = 0.3   # bigram weight
+lambda3 = 0.5   # trigram weight
+
+def interpolated_prob(w1, w2, w3):
+    return (
+        lambda1 * unigram_prob(w3)
+        + lambda2 * bigram_prob(w2, w3)
+        + lambda3 * trigram_prob(w1, w2, w3)
+    )
+def evaluate_sentence(words):
+    backoff_log_prob = 0
+    interpolation_log_prob = 0
+
+    print("\nWord Prediction Results:")
+    print("-" * 70)
+
+    for i in range(2, len(words)):
+        w1, w2, w3 = words[i-2], words[i-1], words[i]
+
+        backoff_p, level = backoff_prob(w1, w2, w3)
+        interp_p = interpolated_prob(w1, w2, w3)
+
+        backoff_log_prob += math.log(backoff_p)
+        interpolation_log_prob += math.log(interp_p)
+
+        print(f"Context: ({w1}, {w2}) -> {w3}")
+        print(f"Backoff Probability       : {backoff_p:.6f} using {level}")
+        print(f"Interpolation Probability : {interp_p:.6f}")
+        print()
+
+    return backoff_log_prob, interpolation_log_prob
+
+backoff_score, interpolation_score = evaluate_sentence(test_words)
+
+print("=" * 70)
+print("Final Evaluation")
+print("=" * 70)
+
+print(f"Backoff Log Probability       : {backoff_score:.6f}")
+print(f"Interpolation Log Probability : {interpolation_score:.6f}")
+
+if interpolation_score > backoff_score:
+    print("\nBetter Method: Deleted Interpolation")
+else:
+    print("\nBetter Method: Backoff")
+
+print("""
+Justification:
+Backoff uses the highest-order available model. It first checks trigram counts.
+If the trigram count is zero, it falls back to bigram probability. If the bigram
+is also unseen, it uses unigram probability.
+
+Deleted interpolation combines unigram, bigram, and trigram probabilities using
+weights. This is often better because it does not completely ignore lower-order
+models when trigram information exists.
+
+Backoff is simple and useful for sparse data.
+Interpolation usually gives a smoother and more balanced probability distribution.
+""")
